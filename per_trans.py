@@ -17,6 +17,7 @@ from matplotlib import cm
 
 workingdir = '/astro/store/scratch/jrad/stsp/n8s/'
 actionL = True # has the Action=L rerun been done to make vis files?
+bump_lim = 1 # number of epochs bump must exist for
 
 
 # read in each parambest file, save as big structure
@@ -61,7 +62,7 @@ for n in range(len(pbestfile)):
         y1[n,i] = t[np_l + 3 + i*3.]
 
         k = np.mod(flg, 2)
-        in_trans[n,i] = np.sum()
+        in_trans[n,i] = (k == 1.).sum()
 
         flg = (flg - k)/2.0
 
@@ -70,10 +71,14 @@ for n in range(len(pbestfile)):
 # The general plot, replicate from IDL work
 plt.figure()
 for k in range(int(nspt)):
-    plt.scatter(tmid, y1[:,k], cmap=cm.RdBu, c=r1[:,k], alpha=0.6,
-                s=(r1[:,k]/np.nanmax(r1)*20.)**2.)
+    yes = np.where((in_trans[:,k] >= bump_lim))
+    plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
+                s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
-plt.xlabel('Time')
-plt.ylabel('Lon')
+plt.xlabel('Time (BJD - 2454833 days')
+plt.ylabel('Longitude (deg)')
+cb = plt.colorbar()
+cb.set_label('spot radius')
+plt.title('In-Transit Spots Only')
 plt.show()
