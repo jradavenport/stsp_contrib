@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 workingdir = '/astro/store/scratch/jrad/stsp/n8s/'
+actionL = True # has the Action=L rerun been done to make vis files?
+
 
 # read in each parambest file, save as big structure
 os.system('ls ' + workingdir + '*parambest*.txt > parambest.lis')
@@ -25,25 +27,45 @@ pbestfile = np.loadtxt('parambest.lis', dtype='string')
 t = np.loadtxt(pbestfile[0], dtype='float', usecols=(0,), unpack=True, delimiter=' ')
 nspt = (len(t) - 3.) / 2. / 3.
 
-# variables to store spot properties
+# variables to store spot properties (parambest files)
 r1 = np.zeros((len(pbestfile), nspt))
 x1 = np.zeros((len(pbestfile), nspt))
 y1 = np.zeros((len(pbestfile), nspt))
-in_trans = np.zeros((len(pbestfile), nspt))
+chi = np.zeros_like(pbestfile)
 
-# properties for each solution
-chi = np.zeros_like(pbestfile) # chisq
+# properties for each solution window (lcbest files)
+in_trans = np.zeros((len(pbestfile), nspt))
 tmid = np.arange(len(pbestfile)) # mid-transit time
 
 for n in range(len(pbestfile)):
-   t = np.loadtxt(pbestfile[n], dtype='float', usecols=(0,), unpack=True, delimiter=' ')
-   np_l = nspt * 3 + 1
-   chi[n] = t[np_l]
+    t = np.loadtxt(pbestfile[n], dtype='float', usecols=(0,), unpack=True, delimiter=' ')
+    np_l = nspt * 3 + 1
+    chi[n] = t[np_l]
 
-   for k in range(int(nspt)):
-      r1[n,k] = t[np_l + 1 + k*3.]
-      x1[n,k] = t[np_l + 2 + k*3.]
-      y1[n,k] = t[np_l + 3 + k*3.]
+    # read in the lcbest file (or lcout)
+    if actionL is True:
+        tn,fn,en,mn,flg = np.loadtxt(pbestfile[n].replace('parambest', 'L_lcout'),
+                                     dtype='float', unpack=True)
+    else:
+        tn,fn,en,mn = np.loadtxt(pbestfile[n].replace('parambest', 'lcbest'),
+                                 dtype='float', unpack=True)
+        flg = np.zeros_like(tn)
+
+    tmid[n] = np.median(tn)
+
+
+
+    for i in range(int(nspt)):
+        r1[n,i] = t[np_l + 1 + i*3.]
+        x1[n,i] = t[np_l + 2 + i*3.]
+        y1[n,i] = t[np_l + 3 + i*3.]
+
+        k = np.mod(flg, 2)
+        in_trans[n,i] = np.sum()
+
+        flg = (flg - k)/2.0
+
+
 
 # The general plot, replicate from IDL work
 plt.figure()
@@ -55,5 +77,3 @@ plt.ylim((0,360))
 plt.xlabel('Time')
 plt.ylabel('Lon')
 plt.show()
-
-# read in each lcbest file, then step thru each transit
