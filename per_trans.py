@@ -76,7 +76,7 @@ for k in range(int(nspt)):
                 s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
-plt.xlabel('Time (BJD - 2454833 days')
+plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
 cb = plt.colorbar()
 cb.set_label('spot radius')
