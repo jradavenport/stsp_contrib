@@ -7,15 +7,16 @@ for each transit:
     - pick best overall model, look for residuals
 - save big structure or file of spot (position, rad, time)
 
-
 '''
 
 import numpy as np
 import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from scipy import stats
+from sklearn import mixture
 
-workingdir = '/astro/store/scratch/jrad/stsp/n8s/'
+workingdir = '/astro/store/scratch/jrad/stsp/joe/'
 actionL = True # has the Action=L rerun been done to make vis files?
 bump_lim = 1 # number of epochs bump must exist for
 
@@ -45,12 +46,13 @@ for n in range(len(pbestfile)):
 
     # read in the lcbest file (or lcout)
     if actionL is True:
-        tn,fn,en,mn,flg = np.loadtxt(pbestfile[n].replace('parambest', 'L_lcout'),
+        tn,fn,en,mn,flg,x = np.loadtxt(pbestfile[n].replace('parambest', 'L_lcout'),
                                      dtype='float', unpack=True)
     else:
         tn,fn,en,mn = np.loadtxt(pbestfile[n].replace('parambest', 'lcbest'),
                                  dtype='float', unpack=True)
         flg = np.zeros_like(tn)
+        x = np.zeros_like(tn)
 
     tmid[n] = np.median(tn)
 
@@ -65,6 +67,29 @@ for n in range(len(pbestfile)):
         in_trans[n,i] = (k == 1.).sum()
 
         flg = (flg - k)/2.0
+
+
+# follow scipy.stats tutorial for Kernel Density Estimator
+yes1 = np.where((in_trans >= bump_lim))
+
+tmid_nspt = np.repeat(tmid, nspt).reshape((len(tmid), nspt))
+
+# data3d = np.squeeze(np.array([[tmid_nspt[yes1,:].ravel()],
+#           [y1[yes1,:].ravel()],
+#           [r1[yes1,:].ravel()]]))
+data3d = np.squeeze(np.array([[tmid_nspt[yes1,:].ravel()],
+          [y1[yes1,:].ravel()]]))
+
+samples = data3d.T
+
+gmix = mixture.GMM(n_components=5, covariance_type='full')
+gmix.fit(samples)
+
+colors = ['r' if i==0 else 'g' for i in gmix.predict(samples)]
+ax = plt.gca()
+ax.scatter(samples[:,0], samples[:,1], c=colors, alpha=0.6)#, s=(samples[:,2]/np.nanmax(samples[:,2])*20.)**2.)
+plt.show()
+
 
 
 
