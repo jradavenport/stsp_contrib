@@ -15,6 +15,12 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from scipy import stats
 from sklearn import mixture
+from matplotlib.mlab import griddata
+from scipy import linalg
+import itertools
+import matplotlib as mpl
+
+
 
 workingdir = '/astro/store/scratch/jrad/stsp/joe/'
 actionL = True # has the Action=L rerun been done to make vis files?
@@ -69,41 +75,108 @@ for n in range(len(pbestfile)):
         flg = (flg - k)/2.0
 
 
-# follow scipy.stats tutorial for Kernel Density Estimator
-yes1 = np.where((in_trans >= bump_lim))
 
 tmid_nspt = np.repeat(tmid, nspt).reshape((len(tmid), nspt))
 
-# data3d = np.squeeze(np.array([[tmid_nspt[yes1,:].ravel()],
-#           [y1[yes1,:].ravel()],
-#           [r1[yes1,:].ravel()]]))
-data3d = np.squeeze(np.array([[tmid_nspt[yes1,:].ravel()],
-          [y1[yes1,:].ravel()]]))
+tlim = 1400.0
+yes1 = np.where((in_trans >= bump_lim) & (tmid_nspt < tlim))
 
-samples = data3d.T
 
-gmix = mixture.GMM(n_components=5, covariance_type='full')
-gmix.fit(samples)
+xo = tmid_nspt[yes1,:].ravel()
+yo = y1[yes1,:].ravel()
+zo = r1[yes1,:].ravel()
+data3d = np.squeeze(np.array([ [xo], [yo], [zo] ]))
 
-colors = ['r' if i==0 else 'g' for i in gmix.predict(samples)]
-ax = plt.gca()
-ax.scatter(samples[:,0], samples[:,1], c=colors, alpha=0.6)#, s=(samples[:,2]/np.nanmax(samples[:,2])*20.)**2.)
+data2d = np.squeeze(np.array([ [xo], [yo] ]))
+
+X_train = data3d.T
+
+#### just try straight copying an example, then swap out data
+np.random.seed(0)
+# fit a Gaussian Mixture Model with two components
+clf = mixture.GMM(n_components=32, covariance_type='full')
+clf.fit(X_train)
+Y_ = clf.predict(X_train)
+
+# x = np.linspace(0, tlim,num=200)
+# y = np.linspace(0, 360.0,num=200)
+# X, Y = np.meshgrid(x, y)
+# zi = griddata(xo,yo,zo,X,Y,interp='linear').data
+# zi[np.isnan(zi)] = 0.
+# XX = np.array([X.ravel(), Y.ravel(),zi.ravel()]).T
+# Z = -clf.score_samples(XX)[0]
+# Z = Z.reshape(X.shape)
+
+# splot = plt.subplot(1, 1, 1)
+# color_iter = itertools.cycle(['r', 'g', 'b', 'c', 'm' ,'k','y'])
+# for i, (mean, covar, color) in enumerate(zip(
+#         clf.means_, clf._get_covars(), color_iter)):
+#     covar = covar[0:2,0:2]
+#     mean = mean[0:2]
+#     v, w = linalg.eigh(covar)
+#     u = w[0] / linalg.norm(w[0])
+#
+#     if not np.any(Y_ == i):
+#         continue
+#     plt.scatter(X_train[Y_ == i, 0], X_train[Y_ == i, 1], .8, color=color)
+#     # Plot an ellipse to show the Gaussian component
+#     angle = np.arctan2(w[0][1], w[0][0])
+#     angle = 180 * angle / np.pi  # convert to degrees
+#     v *= 4
+#     ell = mpl.patches.Ellipse(mean, v[0], v[1], 180 + angle, color=color)
+#     ell.set_clip_box(splot.bbox)
+#     ell.set_alpha(.5)
+#     splot.add_artist(ell)
+
+
+
+# CS = plt.contour(X, Y, Z)
+# CB = plt.colorbar(CS, shrink=0.8, extend='both')
+
+plt.figure()
+plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired)
+plt.xlabel('Time (BJD - 2454833 days)')
+plt.ylabel('Longitude (deg)')
+plt.title('Example GMM, 32 components')
+cb = plt.colorbar()
+cb.set_label('GMM component #')
 plt.show()
 
+
+
+ntrials = 50
+ncomp = np.arange(10,40)
+bic = np.zeros_like(ncomp)
+i=0
+
+
+plt.figure()
+for k in range(ntrials):
+    np.random.seed(k)
+    for n in ncomp:
+        clf = mixture.GMM(n_components=n, covariance_type='full')
+        clf.fit(X_train)
+        Y_ = clf.predict(X_train)
+        bic[i] = clf.bic(X_train)
+        i=i+1
+    plt.plot(ncomp,bic,alpha=0.5)
+plt.xlabel('N components')
+plt.ylabel('BIC')
+plt.show()
 
 
 
 # The general plot, replicate from IDL work
-plt.figure()
-for k in range(int(nspt)):
-    yes = np.where((in_trans[:,k] >= bump_lim))
-    plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
-                s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
-plt.xlim((np.min(tmid), np.max(tmid)))
-plt.ylim((0,360))
-plt.xlabel('Time (BJD - 2454833 days)')
-plt.ylabel('Longitude (deg)')
-cb = plt.colorbar()
-cb.set_label('spot radius')
-plt.title('In-Transit Spots Only')
-plt.show()
+# plt.figure()
+# for k in range(int(nspt)):
+#     yes = np.where((in_trans[:,k] >= bump_lim))
+#     plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
+#                 s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
+# plt.xlim((np.min(tmid), np.max(tmid)))
+# plt.ylim((0,360))
+# plt.xlabel('Time (BJD - 2454833 days)')
+# plt.ylabel('Longitude (deg)')
+# cb = plt.colorbar()
+# cb.set_label('spot radius')
+# plt.title('In-Transit Spots Only')
+# plt.show()
