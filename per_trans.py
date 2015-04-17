@@ -13,8 +13,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from scipy import stats
 from sklearn import mixture
+from scipy import stats
 from matplotlib.mlab import griddata
 from scipy import linalg
 import itertools
@@ -79,15 +79,12 @@ for n in range(len(pbestfile)):
 tmid_nspt = np.repeat(tmid, nspt).reshape((len(tmid), nspt))
 
 tlim = 1400.0
-yes1 = np.where((in_trans >= bump_lim) & (tmid_nspt < tlim))
+yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
 
-
-xo = tmid_nspt[yes1,:].ravel()
-yo = y1[yes1,:].ravel()
-zo = r1[yes1,:].ravel()
+xo = tmid_nspt.ravel()[yes1]
+yo = y1.ravel()[yes1]
+zo = r1.ravel()[yes1]
 data3d = np.squeeze(np.array([ [xo], [yo], [zo] ]))
-
-data2d = np.squeeze(np.array([ [xo], [yo] ]))
 
 X_train = data3d.T
 
@@ -134,49 +131,52 @@ Y_ = clf.predict(X_train)
 # CB = plt.colorbar(CS, shrink=0.8, extend='both')
 
 plt.figure()
-plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired)
+plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired, alpha=0.6)
 plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
 plt.title('Example GMM, 32 components')
+plt.xlim((np.min(tmid), np.max(tmid)))
+plt.ylim((0,360))
 cb = plt.colorbar()
 cb.set_label('GMM component #')
 plt.show()
 
 
 
-ntrials = 50
-ncomp = np.arange(10,40)
-bic = np.zeros_like(ncomp)
-i=0
+# The general plot, replicate from IDL work
+plt.figure()
+for k in range(int(nspt)):
+    yes = np.where((in_trans[:,k] >= bump_lim))
+    plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
+                s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
+plt.xlim((np.min(tmid), np.max(tmid)))
+plt.ylim((0,360))
+plt.xlabel('Time (BJD - 2454833 days)')
+plt.ylabel('Longitude (deg)')
+cb = plt.colorbar()
+cb.set_label('spot radius')
+plt.title('In-Transit Spots Only')
+plt.show()
 
+
+
+ntrials = 1
+ncomp = np.arange(1,40)
+bic = np.zeros_like(ncomp)
 
 plt.figure()
 for k in range(ntrials):
-    np.random.seed(k)
+
+    i=0
     for n in ncomp:
+        np.random.seed(k+n)
         clf = mixture.GMM(n_components=n, covariance_type='full')
         clf.fit(X_train)
         Y_ = clf.predict(X_train)
         bic[i] = clf.bic(X_train)
         i=i+1
-    plt.plot(ncomp,bic,alpha=0.5)
+    plt.plot(ncomp,bic,'b',alpha=0.5)
 plt.xlabel('N components')
 plt.ylabel('BIC')
 plt.show()
 
-
-
-# The general plot, replicate from IDL work
-# plt.figure()
-# for k in range(int(nspt)):
-#     yes = np.where((in_trans[:,k] >= bump_lim))
-#     plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
-#                 s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
-# plt.xlim((np.min(tmid), np.max(tmid)))
-# plt.ylim((0,360))
-# plt.xlabel('Time (BJD - 2454833 days)')
-# plt.ylabel('Longitude (deg)')
-# cb = plt.colorbar()
-# cb.set_label('spot radius')
-# plt.title('In-Transit Spots Only')
-# plt.show()
