@@ -91,7 +91,7 @@ X_train = data3d.T
 #### just try straight copying an example, then swap out data
 np.random.seed(0)
 # fit a Gaussian Mixture Model with two components
-clf = mixture.GMM(n_components=32, covariance_type='full')
+clf = mixture.GMM(n_components=42, covariance_type='full')
 clf.fit(X_train)
 Y_ = clf.predict(X_train)
 
@@ -134,7 +134,7 @@ plt.figure()
 plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired, alpha=0.6)
 plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
-plt.title('Example GMM, 32 components')
+plt.title('Example GMM, 42 components')
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
 cb = plt.colorbar()
