@@ -18,7 +18,8 @@ from scipy import stats
 from matplotlib.mlab import griddata
 from scipy import linalg
 import itertools
-import matplotlib as mpl
+from matplotlib.patches import Ellipse
+
 
 
 
@@ -91,50 +92,58 @@ X_train = data3d.T
 #### just try straight copying an example, then swap out data
 np.random.seed(0)
 # fit a Gaussian Mixture Model with two components
-clf = mixture.GMM(n_components=42, covariance_type='full')
+clf = mixture.GMM(n_components=32, covariance_type='full')
 clf.fit(X_train)
 Y_ = clf.predict(X_train)
 
-# x = np.linspace(0, tlim,num=200)
-# y = np.linspace(0, 360.0,num=200)
-# X, Y = np.meshgrid(x, y)
-# zi = griddata(xo,yo,zo,X,Y,interp='linear').data
-# zi[np.isnan(zi)] = 0.
-# XX = np.array([X.ravel(), Y.ravel(),zi.ravel()]).T
-# Z = -clf.score_samples(XX)[0]
-# Z = Z.reshape(X.shape)
 
-# splot = plt.subplot(1, 1, 1)
-# color_iter = itertools.cycle(['r', 'g', 'b', 'c', 'm' ,'k','y'])
-# for i, (mean, covar, color) in enumerate(zip(
-#         clf.means_, clf._get_covars(), color_iter)):
-#     covar = covar[0:2,0:2]
-#     mean = mean[0:2]
-#     v, w = linalg.eigh(covar)
-#     u = w[0] / linalg.norm(w[0])
-#
-#     if not np.any(Y_ == i):
-#         continue
-#     plt.scatter(X_train[Y_ == i, 0], X_train[Y_ == i, 1], .8, color=color)
-#     # Plot an ellipse to show the Gaussian component
-#     angle = np.arctan2(w[0][1], w[0][0])
-#     angle = 180 * angle / np.pi  # convert to degrees
-#     v *= 4
-#     ell = mpl.patches.Ellipse(mean, v[0], v[1], 180 + angle, color=color)
-#     ell.set_clip_box(splot.bbox)
-#     ell.set_alpha(.5)
-#     splot.add_artist(ell)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+color_iter = itertools.cycle(['r', 'g', 'b', 'c', 'm' ,'k','y'])
+
+# find each group and how many points are in each
+good, goodcts = np.unique(Y_, return_counts=True)
+
+angle_out = np.zeros(clf.n_components)
+for i in range(clf.n_components):
+# for i in good[goodcts>5]:
+    means = clf.means_[i, 0:2]
+
+    # for GMM
+    # covar = clf.covars_[i][0:2, 0:2]
+
+    # for all modes of GMM
+    covar = clf._get_covars()[i][0:2, 0:2]
+
+    v, w, = linalg.eigh(covar)
+    angle = np.arctan2(w[0][1], w[0][0]) * 180.0 / np.pi
+    angle_out[i] = angle
+
+    ell = Ellipse(means, v[0], v[1], angle)
+    ax.add_artist(ell)
+    ell.set_clip_box(ax.bbox)
+    ell.set_facecolor('None')
+    ell.set_fill(False)
+    ell.set_color(color_iter.next())
+    # ell.set_alpha(.25)
+
+plt.xlim((np.min(tmid), np.max(tmid)))
+plt.ylim((0,360))
+plt.scatter(xo, yo, c='k', s=(zo / np.nanmax(r1)*20.)**2., alpha=0.6)
+plt.show()
+
+plt.figure()
+h = plt.hist(angle_out)
+plt.show()
 
 
 
-# CS = plt.contour(X, Y, Z)
-# CB = plt.colorbar(CS, shrink=0.8, extend='both')
 
 plt.figure()
 plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired, alpha=0.6)
 plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
-plt.title('Example GMM, 42 components')
+plt.title('Example GMM')
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
 cb = plt.colorbar()
@@ -159,24 +168,24 @@ plt.title('In-Transit Spots Only')
 plt.show()
 
 
-
-ntrials = 1
-ncomp = np.arange(1,40)
-bic = np.zeros_like(ncomp)
-
-plt.figure()
-for k in range(ntrials):
-
-    i=0
-    for n in ncomp:
-        np.random.seed(k+n)
-        clf = mixture.GMM(n_components=n, covariance_type='full')
-        clf.fit(X_train)
-        Y_ = clf.predict(X_train)
-        bic[i] = clf.bic(X_train)
-        i=i+1
-    plt.plot(ncomp,bic,'b',alpha=0.5)
-plt.xlabel('N components')
-plt.ylabel('BIC')
-plt.show()
+#
+# ntrials = 1
+# ncomp = np.arange(1,40)
+# bic = np.zeros_like(ncomp)
+#
+# plt.figure()
+# for k in range(ntrials):
+#
+#     i=0
+#     for n in ncomp:
+#         np.random.seed(k+n)
+#         clf = mixture.GMM(n_components=n, covariance_type='full')
+#         clf.fit(X_train)
+#         Y_ = clf.predict(X_train)
+#         bic[i] = clf.bic(X_train)
+#         i=i+1
+#     plt.plot(ncomp,bic,'b',alpha=0.5)
+# plt.xlabel('N components')
+# plt.ylabel('BIC')
+# plt.show()
 
