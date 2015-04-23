@@ -14,14 +14,16 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn import mixture
-from scipy import stats
-from matplotlib.mlab import griddata
 from scipy import linalg
 import itertools
 from matplotlib.patches import Ellipse
+import matplotlib as mpl
+
+# from scipy import stats
+# from matplotlib.mlab import griddata
 
 
-
+mpl.rcParams['font.size'] = 16
 
 workingdir = '/astro/store/scratch/jrad/stsp/joe/'
 actionL = True # has the Action=L rerun been done to make vis files?
@@ -160,11 +162,11 @@ for k in range(int(nspt)):
                 s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
-plt.xlabel('Time (BJD - 2454833 days)')
-plt.ylabel('Longitude (deg)')
+plt.xlabel('Time (BJD - 2454833 days)')#, fontsize=18)
+plt.ylabel('Longitude (deg)')#, fontsize=18)
+plt.title('In-Transit Spots Only')#, fontsize=18)
 cb = plt.colorbar()
-cb.set_label('spot radius')
-plt.title('In-Transit Spots Only')
+cb.set_label('spot radius')#, fontsize=18)
 plt.show()
 
 
