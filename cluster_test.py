@@ -13,6 +13,9 @@ from scipy import linalg
 import itertools
 from matplotlib.patches import Ellipse
 import matplotlib as mpl
+from sklearn.cluster import DBSCAN
+from sklearn import metrics
+
 
 
 mpl.rcParams['font.size'] = 16
@@ -76,27 +79,28 @@ xo = tmid_nspt.ravel()[yes1]
 yo = y1.ravel()[yes1]
 zo = r1.ravel()[yes1]
 data3d = np.squeeze(np.array([ [xo], [yo], [zo] ]))
-
 X_train = data3d.T
+
+data2d = np.squeeze(np.array([ [xo], [yo] ]))
+X2d = data2d.T
 
 # the data is now ready for clustering!!
 ###############################################
 
 # The general plot, replicate from IDL work
-plt.figure()
-for k in range(int(nspt)):
-    yes = np.where((in_trans[:,k] >= bump_lim))
-    plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
-                s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
-plt.xlim((np.min(tmid), np.max(tmid)))
-plt.ylim((0,360))
-plt.xlabel('Time (BJD - 2454833 days)')
-plt.ylabel('Longitude (deg)')
-plt.title('In-Transit Spots Only')
-cb = plt.colorbar()
-cb.set_label('spot radius')
-plt.show()
-
+# plt.figure()
+# for k in range(int(nspt)):
+#     yes = np.where((in_trans[:,k] >= bump_lim))
+#     plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
+#                 s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
+# plt.xlim((np.min(tmid), np.max(tmid)))
+# plt.ylim((0,360))
+# plt.xlabel('Time (BJD - 2454833 days)')
+# plt.ylabel('Longitude (deg)')
+# plt.title('In-Transit Spots Only')
+# cb = plt.colorbar()
+# cb.set_label('spot radius')
+# plt.show()
 #####################
 
 # now try different clustering approaches
@@ -134,15 +138,45 @@ Y_ = clf.predict(X_train)
 # plt.show()
 
 # make standard plot, color by cluster
-plt.figure()
-plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired, alpha=0.6)
-plt.xlabel('Time (BJD - 2454833 days)')
-plt.ylabel('Longitude (deg)')
-plt.title('Example GMM')
-plt.xlim((np.min(tmid), np.max(tmid)))
-plt.ylim((0,360))
-cb = plt.colorbar()
-cb.set_label('GMM component #')
-plt.show()
+# plt.figure()
+# plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired, alpha=0.6)
+# plt.xlabel('Time (BJD - 2454833 days)')
+# plt.ylabel('Longitude (deg)')
+# plt.title('Example GMM')
+# plt.xlim((np.min(tmid), np.max(tmid)))
+# plt.ylim((0,360))
+# cb = plt.colorbar()
+# cb.set_label('GMM component #')
+# plt.show()
 
+
+#-- follow DBSCAN example from:
+# http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py
+db = DBSCAN(eps=10,min_samples=3, algorithm='kd_tree').fit(X2d)
+core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
+core_samples_mask[db.core_sample_indices_] = True
+labels = db.labels_
+# Number of clusters in labels, ignoring noise if present.
+n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+
+# Black removed and is used for noise instead.
+unique_labels = set(labels)
+colors = cm.Spectral(np.linspace(0, 1, len(unique_labels)))
+for k, col in zip(unique_labels, colors):
+    if k == -1:
+        # Black used for noise.
+        col = 'k'
+
+    class_member_mask = (labels == k)
+
+    xy = X2d[class_member_mask & core_samples_mask]
+    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+             markeredgecolor='k', markersize=14)
+
+    xy = X2d[class_member_mask & ~core_samples_mask]
+    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=col,
+             markeredgecolor='k', markersize=6)
+
+plt.title('Estimated number of clusters: %d' % n_clusters_)
+plt.show()
 
