@@ -25,6 +25,8 @@ actionL = True # has the Action=L rerun been done to make vis files?
 bump_lim = 1 # number of epochs bump must exist for
 
 
+per = 10.0 # the rotation period used to fold this data and fed to STSP previous to this
+
 # read in each parambest file, save as big structure
 os.system('ls ' + workingdir + '*parambest*.txt > parambest.lis')
 pbestfile = np.loadtxt('parambest.lis', dtype='string')
@@ -168,6 +170,8 @@ n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 unique_labels = set(labels)
 colors = cm.Paired( np.linspace(0, 1, len(unique_labels)) )
 
+slope = []
+per2 = []
 for k, col in zip(unique_labels, colors):
     if k == -1:
         # Black used for noise.
@@ -178,6 +182,14 @@ for k, col in zip(unique_labels, colors):
     xy = Xdbs[class_member_mask & core_samples_mask]
     plt.scatter(xy[:, 0], xy[:, 1], c=col,
             s=(xy[:, 2] / np.nanmax(r1)*20.)**2. )
+    if (k != -1) and (len(xy[:,0]) > 4):
+        coeff = np.polyfit(xy[:,0], xy[:,1], 1)
+        xx = np.array( [min(xy[:,0]), max(xy[:,0])] )
+        plt.plot(xx, np.polyval(coeff, xx), color='k', linewidth=4)
+
+        slope.append(coeff[0]/360.) # save the slope in phase units
+        per2.append( per / (1.0 - (coeff[0] / 360. * per)) )
+
 
     xy = Xdbs[class_member_mask & ~core_samples_mask]
     plt.scatter(xy[:, 0], xy[:, 1], c=col,
@@ -188,5 +200,10 @@ plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
+plt.show()
+
+
+plt.figure()
+h = plt.hist(per2)
 plt.show()
 
