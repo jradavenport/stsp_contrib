@@ -76,7 +76,7 @@ yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
 xo = tmid_nspt.ravel()[yes1] # time
 yo = y1.ravel()[yes1] # lon
 zo = r1.ravel()[yes1] # rad
-lo = x1.ravel()[yes1] # lat
+lo = np.abs(x1.ravel()[yes1]) # lat
 
 data2d = np.squeeze(np.array([ [xo], [yo] ]))
 X2d = data2d.T
@@ -111,8 +111,8 @@ plt.show()
 #-- follow DBSCAN example from:
 # http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py
 
-#Xdbs = X2d # this now works in 2D
-Xdbs = X3d # now do it in the 3D space
+# pick which version of the data to use
+Xdbs = X4d # now do it in the 3D space
 
 db = DBSCAN(eps=10, min_samples=2, algorithm='kd_tree').fit(Xdbs)
 
