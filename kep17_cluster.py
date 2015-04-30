@@ -1,7 +1,5 @@
 '''
-Do the same as in the GMM test code, but try different clustering approaches
-
-once clusters are robust, then fit lines to data within each cluster!
+Do the DBSCAN clustering on Kepler 17
 '''
 
 import numpy as np
@@ -9,14 +7,17 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn import mixture
+from scipy import linalg
+import itertools
+from matplotlib.patches import Ellipse
 import matplotlib as mpl
 from sklearn.cluster import DBSCAN
-
-
-
+from sklearn import metrics
 mpl.rcParams['font.size'] = 16
 
-workingdir = '/astro/store/scratch/jrad/stsp/joe/'
+
+
+workingdir = '/astro/store/scratch/jrad/stsp/n8s/'
 actionL = True # has the Action=L rerun been done to make vis files?
 bump_lim = 1 # number of epochs bump must exist for
 
