@@ -76,11 +76,16 @@ yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
 xo = tmid_nspt.ravel()[yes1]
 yo = y1.ravel()[yes1]
 zo = r1.ravel()[yes1]
-data3d = np.squeeze(np.array([ [xo], [yo], [zo] ]))
-X_train = data3d.T
+lo = np.abs(x1.ravel()[yes1]) # lat
 
 data2d = np.squeeze(np.array([ [xo], [yo] ]))
 X2d = data2d.T
+
+data3d = np.squeeze(np.array([ [xo], [yo], [zo] ]))
+X3d = data3d.T
+
+data4d = np.squeeze(np.array([ [xo], [yo], [zo], [lo] ]))
+X4d = data4d.T
 
 # the data is now ready for clustering!!
 ###############################################
@@ -104,55 +109,11 @@ X2d = data2d.T
 # now try different clustering approaches
 
 
-#-- GMM
-np.random.seed(0)
-clf = mixture.GMM(n_components=32, covariance_type='full')
-clf.fit(X_train)
-Y_ = clf.predict(X_train)
-
-# make plot of all the ellipses
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# color_iter = itertools.cycle(['r', 'g', 'b', 'c', 'm' ,'k','y'])
-# angle_out = np.zeros(clf.n_components)
-# for i in range(clf.n_components):
-#     means = clf.means_[i, 0:2]
-#     covar = clf._get_covars()[i][0:2, 0:2]
-#
-#     v, w, = linalg.eigh(covar)
-#     angle = np.arctan2(w[0][1], w[0][0]) * 180.0 / np.pi
-#     angle_out[i] = angle
-#
-#     ell = Ellipse(means, v[0], v[1], angle)
-#     ax.add_artist(ell)
-#     ell.set_clip_box(ax.bbox)
-#     ell.set_facecolor('None')
-#     ell.set_fill(False)
-#     ell.set_color(color_iter.next())
-#
-# plt.xlim((np.min(tmid), np.max(tmid)))
-# plt.ylim((0,360))
-# plt.scatter(xo, yo, c='k', s=(zo / np.nanmax(r1)*20.)**2., alpha=0.6)
-# plt.show()
-
-# make standard plot, color by cluster
-# plt.figure()
-# plt.scatter(xo, yo, c=Y_, s=(zo / np.nanmax(r1)*20.)**2., cmap=cm.Paired, alpha=0.6)
-# plt.xlabel('Time (BJD - 2454833 days)')
-# plt.ylabel('Longitude (deg)')
-# plt.title('Example GMM')
-# plt.xlim((np.min(tmid), np.max(tmid)))
-# plt.ylim((0,360))
-# cb = plt.colorbar()
-# cb.set_label('GMM component #')
-# plt.show()
-
 
 #-- follow DBSCAN example from:
 # http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py
 
-#Xdbs = X2d # this now works in 2D
-Xdbs = X_train # now do it in the 3D space
+Xdbs = X3d # now do it in the 3D space
 
 db = DBSCAN(eps=10, min_samples=2, algorithm='kd_tree').fit(Xdbs)
 

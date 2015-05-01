@@ -76,7 +76,7 @@ yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
 xo = tmid_nspt.ravel()[yes1] # time
 yo = y1.ravel()[yes1] # lon
 zo = r1.ravel()[yes1] # rad
-lo = np.abs(x1.ravel()[yes1]) # lat
+lo = x1.ravel()[yes1] # lat
 
 data2d = np.squeeze(np.array([ [xo], [yo] ]))
 X2d = data2d.T
@@ -112,7 +112,7 @@ plt.show()
 # http://scikit-learn.org/stable/auto_examples/cluster/plot_dbscan.html#example-cluster-plot-dbscan-py
 
 # pick which version of the data to use
-Xdbs = X4d # now do it in the 3D space
+Xdbs = X3d # now do it in the 3D space
 
 db = DBSCAN(eps=10, min_samples=2, algorithm='kd_tree').fit(Xdbs)
 
@@ -128,6 +128,8 @@ colors = cm.Paired( np.linspace(0, 1, len(unique_labels)) )
 
 slope = []
 per2 = []
+medlat = []
+stdlat = []
 for k, col in zip(unique_labels, colors):
     if k == -1:
         # Black used for noise.
@@ -136,15 +138,19 @@ for k, col in zip(unique_labels, colors):
     class_member_mask = (labels == k)
 
     xy = Xdbs[class_member_mask & core_samples_mask]
+    xy4 = X4d[class_member_mask & core_samples_mask]
     plt.scatter(xy[:, 0], xy[:, 1], c=col,
             s=(xy[:, 2] / np.nanmax(r1)*20.)**2. )
-    if (k != -1) and (len(xy[:,0]) > 4):
+
+    if (k != -1) and (len(xy[:,0]) > 2):
         coeff = np.polyfit(xy[:,0], xy[:,1], 1)
         xx = np.array( [min(xy[:,0]), max(xy[:,0])] )
         plt.plot(xx, np.polyval(coeff, xx), color='k', linewidth=4)
 
-        slope.append(coeff[0]/360.) # save the slope in phase units
+        slope.append( coeff[0]/360. ) # save the slope in phase units
         per2.append( per / (1.0 - (coeff[0] / 360. * per)) )
+        medlat.append( np.median(xy4[:,3])-90. )
+        stdlat.append( np.std(xy4[:,3]) )
 
 
     xy = Xdbs[class_member_mask & ~core_samples_mask]
@@ -161,5 +167,14 @@ plt.show()
 
 plt.figure()
 h = plt.hist(per2)
+plt.xlabel('Period (days)')
+plt.show()
+
+
+plt.figure()
+plt.errorbar(per2, medlat,yerr=stdlat,fmt=None)
+plt.scatter(per2, medlat, marker='o')
+plt.xlabel('Period (days)')
+plt.ylabel('Latitude (deg)')
 plt.show()
 
