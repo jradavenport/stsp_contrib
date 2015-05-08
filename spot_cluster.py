@@ -19,14 +19,19 @@ mpl.rcParams['font.size'] = 16
 #--------- START OF SETUP ------------
 # CONFIG THESE THINGS FOR EACH RUN
 
-# which directory to run in? what settings?
-workingdir = '/astro/store/scratch/jrad/stsp/n8s/'
+#-- which directory to run in? what settings?
+# workingdir = '/astro/store/scratch/jrad/stsp/n8s/' # kepler17
+workingdir = '/astro/store/scratch/jrad/stsp/joe/' # joe model
+
 actionL = True # has the Action=L rerun been done to make vis files?
 bump_lim = 1 # number of epochs bump must exist for
 
-# LC specific settings
-per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
-tlim = 1600.0
+#-- LC specific settings
+# per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
+# tlim = 1600.0 #- Kepler 17
+per = 10.0
+tlim = 1400.0 #- Joe model
+
 
 # parameters for DBSCAN
 cdist = 20.0 # max distance between points to be in cluster
@@ -138,10 +143,14 @@ n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 unique_labels = set(labels)
 colors = cm.Paired( np.linspace(0, 1, len(unique_labels)) )
 
+# parameters to measure within each cluster
 slope = []
 per2 = []
 medlat = []
 stdlat = []
+cdur = [] # duration of cluster (regular dur? folding time?)
+cpeak = [] # cluster peak size
+
 for k, col in zip(unique_labels, colors):
     if k == -1:
         # Black used for noise.
@@ -155,6 +164,7 @@ for k, col in zip(unique_labels, colors):
             s=(xy[:, 2] / np.nanmax(r1)*20.)**2. )
 
     if (k != -1) and (len(xy[:,0]) > 2):
+        # if cluster is good, measure parameters
         coeff = np.polyfit(xy[:,0], xy[:,1], 1)
         xx = np.array( [min(xy[:,0]), max(xy[:,0])] )
         plt.plot(xx, np.polyval(coeff, xx), color='k', linewidth=4)
@@ -163,6 +173,9 @@ for k, col in zip(unique_labels, colors):
         per2.append( per / (1.0 - (coeff[0] / 360. * per)) )
         medlat.append( np.median(xy4[:,3])-90. )
         stdlat.append( np.std(xy4[:,3]) )
+
+        cdur.append( np.max(xy[:,0]) - np.min(xy[:,0]) )
+        cpeak.append( np.max(xy[:,2]) )
 
 
     xy = Xdbs[class_member_mask & ~core_samples_mask]
@@ -180,19 +193,39 @@ plt.show()
 plt.figure()
 h = plt.hist(per2)
 plt.xlabel('Period (days)')
+plt.ylabel('Number of Clusters')
 plt.show()
 
 
 plt.figure()
 plt.errorbar(per2, medlat,yerr=stdlat,fmt=None)
 plt.scatter(per2, medlat, marker='o')
-plt.xlabel('Period (days)')
-plt.ylabel('Latitude (deg)')
+plt.xlabel('Cluster Period (days)')
+plt.ylabel('Median Latitude (deg)')
 plt.show()
 
 # make these other plots
 # 1. (cluster duration, peak spot size) scatter plot for all clusters
+plt.figure()
+plt.scatter(cdur, cpeak, marker='o')
+plt.xlabel('Cluster Duration')
+plt.ylabel('Max Radius')
+plt.show()
+
+
+
 # 2. (time, spot radius) overlap time series for all clusters
-#
+plt.figure()
+for k, col in zip(unique_labels, colors):
+    if k == -1:
+        # Black used for noise.
+        col = 'k'
+    class_member_mask = (labels == k)
+    xy = Xdbs[class_member_mask & core_samples_mask]
+    if (k != -1) and (len(xy[:,0]) > 2):
+        plt.plot(xy[:,0]-np.min(xy[:,0]), xy[:,2], color=col)
+plt.xlabel('Time')
+plt.ylabel('Radius')
+plt.show()
 
 # Compute the differential rotation (k) parameter
