@@ -1,5 +1,5 @@
 '''
-Do the DBSCAN clustering on Kepler 17
+Do the DBSCAN clustering on STSP results
 '''
 
 import numpy as np
@@ -16,12 +16,25 @@ from sklearn import metrics
 mpl.rcParams['font.size'] = 16
 
 
+#--------- START OF SETUP ------------
+# CONFIG THESE THINGS FOR EACH RUN
+
+# which directory to run in? what settings?
 workingdir = '/astro/store/scratch/jrad/stsp/n8s/'
 actionL = True # has the Action=L rerun been done to make vis files?
 bump_lim = 1 # number of epochs bump must exist for
 
-
+# LC specific settings
 per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
+tlim = 1600.0
+
+# parameters for DBSCAN
+cdist = 20.0 # max distance between points to be in cluster
+cmin = 2 # min number of points to form a cluster
+
+
+#--------- END OF SETUP ------------
+
 
 # read in each parambest file, save as big structure
 os.system('ls ' + workingdir + '*parambest*.txt > parambest.lis')
@@ -70,7 +83,6 @@ for n in range(len(pbestfile)):
 
 tmid_nspt = np.repeat(tmid, nspt).reshape((len(tmid), nspt))
 
-tlim = 1600.0
 yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
 
 xo = tmid_nspt.ravel()[yes1] # time
@@ -114,7 +126,7 @@ plt.show()
 # pick which version of the data to use
 Xdbs = X3d # now do it in the 3D space
 
-db = DBSCAN(eps=10, min_samples=2, algorithm='kd_tree').fit(Xdbs)
+db = DBSCAN(eps=cdist, min_samples=cmin, algorithm='kd_tree').fit(Xdbs)
 
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
@@ -178,3 +190,9 @@ plt.xlabel('Period (days)')
 plt.ylabel('Latitude (deg)')
 plt.show()
 
+# make these other plots
+# 1. (cluster duration, peak spot size) scatter plot for all clusters
+# 2. (time, spot radius) overlap time series for all clusters
+#
+
+# Compute the differential rotation (k) parameter
