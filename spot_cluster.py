@@ -19,12 +19,12 @@ mpl.rcParams['font.size'] = 16
 #--------- START OF SETUP ------------
 # CONFIG THESE THINGS FOR EACH RUN
 
+# fname = 'k17'
+fname = 'joe'
+
 #-- which directory to run in? what settings?
 # workingdir = '/astro/store/scratch/jrad/stsp/n8s/' # kepler17
 workingdir = '/astro/store/scratch/jrad/stsp/joe/' # joe model
-
-actionL = True # has the Action=L rerun been done to make vis files?
-bump_lim = 1 # number of epochs bump must exist for
 
 #-- LC specific settings
 # per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
@@ -34,8 +34,10 @@ tlim = 1400.0 #- Joe model
 
 
 # parameters for DBSCAN
-cdist = 20.0 # max distance between points to be in cluster
-cmin = 2 # min number of points to form a cluster
+cdist = 15.0 # max distance between points to be in cluster
+cmin = 3 # min number of points to form a cluster
+actionL = True # has the Action=L rerun been done to make vis files?
+bump_lim = 1 # number of epochs bump must exist for
 
 
 #--------- END OF SETUP ------------
@@ -67,10 +69,10 @@ for n in range(len(pbestfile)):
     # read in the lcbest file (or lcout)
     if actionL is True:
         tn,fn,en,mn,flg = np.loadtxt(pbestfile[n].replace('parambest', 'L_lcout'),
-                                     dtype='float', unpack=True)
+                                     dtype='float', unpack=True, usecols=(0,1,2,3,4))
     else:
         tn,fn,en,mn = np.loadtxt(pbestfile[n].replace('parambest', 'lcbest'),
-                                 dtype='float', unpack=True)
+                                 dtype='float', unpack=True, usecols=(0,1,2,3))
         flg = np.zeros_like(tn)
         x = np.zeros_like(tn)
 
@@ -109,7 +111,7 @@ X4d = data4d.T
 ###############################################
 
 # The general plot, replicate from IDL work
-plt.figure()
+plt.figure(figsize=(12,6))
 for k in range(int(nspt)):
     yes = np.where((in_trans[:,k] >= bump_lim))
     plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
@@ -121,6 +123,7 @@ plt.ylabel('Longitude (deg)')
 plt.title('In-Transit Spots Only')
 cb = plt.colorbar()
 cb.set_label('spot radius')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time.png', dpi=250)
 plt.show()
 #####################
 
@@ -151,6 +154,7 @@ stdlat = []
 cdur = [] # duration of cluster (regular dur? folding time?)
 cpeak = [] # cluster peak size
 
+plt.figure(figsize=(10,6))
 for k, col in zip(unique_labels, colors):
     if k == -1:
         # Black used for noise.
@@ -187,6 +191,9 @@ plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((0,360))
+# cb = plt.colorbar() #oops, this isn't mappable
+# cb.set_label('cluster number')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.png', dpi=250)
 plt.show()
 
 
@@ -194,6 +201,7 @@ plt.figure()
 h = plt.hist(per2)
 plt.xlabel('Period (days)')
 plt.ylabel('Number of Clusters')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_hist.png', dpi=250)
 plt.show()
 
 
@@ -202,6 +210,7 @@ plt.errorbar(per2, medlat,yerr=stdlat,fmt=None)
 plt.scatter(per2, medlat, marker='o')
 plt.xlabel('Cluster Period (days)')
 plt.ylabel('Median Latitude (deg)')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.png', dpi=250)
 plt.show()
 
 # make these other plots
@@ -210,6 +219,7 @@ plt.figure()
 plt.scatter(cdur, cpeak, marker='o')
 plt.xlabel('Cluster Duration')
 plt.ylabel('Max Radius')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.png', dpi=250)
 plt.show()
 
 
@@ -224,8 +234,9 @@ for k, col in zip(unique_labels, colors):
     xy = Xdbs[class_member_mask & core_samples_mask]
     if (k != -1) and (len(xy[:,0]) > 2):
         plt.plot(xy[:,0]-np.min(xy[:,0]), xy[:,2], color=col)
-plt.xlabel('Time')
+plt.xlabel('Time (days)')
 plt.ylabel('Radius')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.png', dpi=250)
 plt.show()
 
 # Compute the differential rotation (k) parameter
