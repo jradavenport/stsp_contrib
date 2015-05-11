@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 
-
 #--------- START OF SETUP ------------
 # CONFIG THESE THINGS FOR EACH RUN
 #-- which directory to run in? what settings?
@@ -29,7 +28,6 @@ BJDREF = 2454833. # kepler17
 # BJDREF = 0.  # Joe model
 
 #--------- END OF SETUP ------------
-
 
 
 #-- read in original .params file, get (t_0, p_orb) to find each transit
@@ -55,6 +53,12 @@ pbestfile = np.loadtxt('parambest.lis', dtype='string')
 tx = np.loadtxt(pbestfile[0], dtype='float', usecols=(0,), unpack=True, delimiter=' ')
 nspt = (len(tx) - 3.) / 2. / 3.
 
+chisq_tr = np.array([], dtype='float') # use np.append to add on to
+tmid_tr = np.array([], dtype='float')
+file_tr = np.array([], dtype='string')
+rad = np.array([], dtype='float') # use np.dstack (or other stack?) to add on to
+lat = np.array([], dtype='float')
+lon = np.array([], dtype='float')
 
 for n in range(len(pbestfile)):
     # read in each lcbest file
@@ -64,14 +68,27 @@ for n in range(len(pbestfile)):
     # read in corresponding parambest file
     t = np.loadtxt(pbestfile[n], dtype='float', usecols=(0,), unpack=True, delimiter=' ')
 
-# step thru every transit in this lcbest file
-# for each transit, compute local chisq
-# save grid of numbers for each transit:
-#   t_mid, chisq, (rad, lat, lon) for each bump present - pad up to 8 spots
-# once every lcbest file read, transit stored,
-#   do a pass thru grid of data, if same transit done in mult.
-#   lcbest files, pick best, remove others!
+    # step thru every transit in this lcbest file
+    trans0 = np.round((tn[0] - float(t_0))/float(p_orb))
+    trans1 = np.round((tn[-1] - float(t_0))/float(p_orb))
+    for j in range(trans0, trans1):
+        trans_j = float(t_0) + float(p_orb)*j
+        intrans = np.where((tn >= trans_j - float(tdur)*0.5) &
+                           (tn <= trans_j + float(tdur)*0.5))
+
+        # for each transit, compute local chisq
+        chisq_tr = np.append(chisq_tr, np.sum( ((mn[intrans] - fn[intrans]) / en[intrans])**2.0 ))
+
+        tmid_tr = np.append(tmid_tr, np.mean(tn[intrans]))
+
+        # save parambest file name
+        file_tr = np.append(file_tr, pbestfile[n])
 
 
-# read in each parambest file, save as big structure
+# once every lcbest file read, pass thru and compare windows in same transit
+for j in range(int( (max(tmid_tr)-min(tmid_tr))/float(p_orb)+1 )):
+    # the transit mid time
+    trans_j = float(t_0) + float(p_orb)*j
+    # find all transits that have same mid time, within some tolerance (0.1 days)
+    xtr = np.where((np.abs(tmid_tr - trans_j)<0.1))
 
