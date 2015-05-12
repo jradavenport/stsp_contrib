@@ -55,16 +55,19 @@ nspt = (len(tx) - 3.) / 2. / 3.
 
 chisq_tr = np.array([], dtype='float') # use np.append to add on to
 tmid_tr = np.array([], dtype='float')
-file_tr = np.array([], dtype='string')
-rad = np.array([], dtype='float') # use np.dstack (or other stack?) to add on to
-lat = np.array([], dtype='float')
-lon = np.array([], dtype='float')
+
+rad = np.empty(nspt, dtype='float') # use np.vstack (or other stack?) to add on to
+lat = np.empty(nspt, dtype='float')
+lon = np.empty(nspt, dtype='float')
 
 for n in range(len(pbestfile)):
     # read in each lcbest file
     # NOTE: needs to have _L mode done, we need the vis flag!
     tn,fn,en,mn,flg = np.loadtxt(pbestfile[n].replace('parambest', 'L_lcout'),
                                  dtype='float', unpack=True, usecols=(0,1,2,3,4))
+    np_l = nspt * 3 + 1
+    i = range(int(nspt))
+
     # read in corresponding parambest file
     t = np.loadtxt(pbestfile[n], dtype='float', usecols=(0,), unpack=True, delimiter=' ')
 
@@ -81,9 +84,20 @@ for n in range(len(pbestfile)):
 
         tmid_tr = np.append(tmid_tr, np.mean(tn[intrans]))
 
-        # save parambest file name
-        file_tr = np.append(file_tr, pbestfile[n])
+        rad = np.vstack( (rad, t[[np_l + 1 + i*3.]]) )
+        lat = np.vstack( (lat, t[[np_l + 2 + i*3.]]) )
+        lon = np.vstack( (lon, t[[np_l + 3 + i*3.]]) )
 
+rad = rad[1:,:] # get rid of first empty row
+lat = lat[1:,:]
+lon = lon[1:,:]
+
+
+tmid_out = np.array([], dtype='float')
+
+rad_out = np.empty(nspt, dtype='float') # use np.vstack (or other stack?) to add on to
+lat_out = np.empty(nspt, dtype='float')
+lon_out = np.empty(nspt, dtype='float')
 
 # once every lcbest file read, pass thru and compare windows in same transit
 for j in range(int( (max(tmid_tr)-min(tmid_tr))/float(p_orb)+1 )):
@@ -91,4 +105,10 @@ for j in range(int( (max(tmid_tr)-min(tmid_tr))/float(p_orb)+1 )):
     trans_j = float(t_0) + float(p_orb)*j
     # find all transits that have same mid time, within some tolerance (0.1 days)
     xtr = np.where((np.abs(tmid_tr - trans_j)<0.1))
+    if len(xtr[0])>0:
+        best = np.argmin(chisq_tr[xtr])
 
+        tmid_out = np.append(tmid_out, trans_j)
+        rad_out = np.vstack( (rad_out, rad[xtr,:][best]) )
+        lat_out = np.vstack( (lat_out, lat[xtr,:][best]) )
+        lon_out = np.vstack( (lon_out, lon[xtr,:][best]) )
