@@ -6,13 +6,10 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from sklearn import mixture
-from scipy import linalg
-import itertools
-from matplotlib.patches import Ellipse
 import matplotlib as mpl
 from sklearn.cluster import DBSCAN
-from sklearn import metrics
+from sklearn import linear_model, datasets
+
 mpl.rcParams['font.size'] = 16
 
 
@@ -213,11 +210,20 @@ plt.ylabel('Median Latitude (deg)')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.png', dpi=250)
 plt.show()
 
-# make these other plots
+
+#-- make these other plots
+
 # 1. (cluster duration, peak spot size) scatter plot for all clusters
+
+# fit a line to this! Use robust random sampling w/ outliers
+model_ransac = linear_model.RANSACRegressor(linear_model.LinearRegression())
+model_ransac.fit(np.array(cdur)[:,np.newaxis], np.array(cpeak)[:,np.newaxis])
+line_y_ransac = model_ransac.predict(np.array(cdur)[:,np.newaxis])
+
 plt.figure()
-plt.scatter(cdur, cpeak, marker='o')
-plt.xlabel('Cluster Duration')
+plt.scatter(cdur, cpeak, marker='d',color='k')
+plt.plot(cdur, line_y_ransac, '-k')
+plt.xlabel('Cluster Duration (days)')
 plt.ylabel('Max Radius')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.png', dpi=250)
 plt.show()
