@@ -6,8 +6,11 @@ can be run on the laptop, just run in the dropbox dir
 
 
 import numpy as np
-import os
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+mpl.rcParams['font.size'] = 16
+
 
 
 # dropboxdir = '/astro/users/jrad/Dropbox/python/kepler17/llama_model/'

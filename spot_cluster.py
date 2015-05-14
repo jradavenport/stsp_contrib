@@ -19,15 +19,18 @@ mpl.rcParams['font.size'] = 16
 # fname = 'k17'
 fname = 'joe'
 
-#-- which directory to run in? what settings?
-# workingdir = '/astro/store/scratch/jrad/stsp/n8s/' # kepler17
-workingdir = '/astro/store/scratch/jrad/stsp/joe/' # joe model
 
-#-- LC specific settings
-# per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
-# tlim = 1600.0 #- Kepler 17
-per = 10.0
-tlim = 1400.0 #- Joe model
+
+if (fname == 'joe'):
+    workingdir = '/astro/store/scratch/jrad/stsp/joe/' # joe model
+    per = 10.0
+    tlim = 1400.0 #- Joe model
+
+if (fname == 'k17'):
+    workingdir = '/astro/store/scratch/jrad/stsp/n8s/' # kepler17
+    per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
+    tlim = 1600.0 #- Kepler 17
+
 
 
 # parameters for DBSCAN

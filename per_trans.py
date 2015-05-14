@@ -10,8 +10,11 @@ for each transit:
 
 import numpy as np
 import os
-import matplotlib.pyplot as plt
-from matplotlib import cm
+# import matplotlib.pyplot as plt
+# from matplotlib import cm
+# import matplotlib as mpl
+#
+# mpl.rcParams['font.size'] = 16
 
 
 #--------- START OF SETUP ------------
