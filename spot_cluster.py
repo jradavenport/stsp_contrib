@@ -16,8 +16,8 @@ mpl.rcParams['font.size'] = 16
 #--------- START OF SETUP ------------
 # CONFIG THESE THINGS FOR EACH RUN
 
-# fname = 'k17'
-fname = 'joe'
+fname = 'k17'
+# fname = 'joe'
 
 
 
@@ -25,13 +25,15 @@ if (fname == 'joe'):
     workingdir = '/astro/store/scratch/jrad/stsp/joe/' # joe model
     per = 10.0
     tlim = 1400.0 #- Joe model
+    phz_max = 180.0
 
 if (fname == 'k17'):
     workingdir = '/astro/store/scratch/jrad/stsp/n8s/' # kepler17
     per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
     tlim = 1600.0 #- Kepler 17
+    phz_max = 360.0
 
-
+phz_min = phz_max - 360.
 
 # parameters for DBSCAN
 cdist = 15.0 # max distance between points to be in cluster
@@ -88,6 +90,8 @@ for n in range(len(pbestfile)):
 
         flg = (flg - k)/2.0
 
+y1[np.where((y1 > phz_max))] = y1[np.where((y1 > phz_max))] - 360.
+
 tmid_nspt = np.repeat(tmid, nspt).reshape((len(tmid), nspt))
 
 yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
@@ -117,7 +121,7 @@ for k in range(int(nspt)):
     plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
                 s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
 plt.xlim((np.min(tmid), np.max(tmid)))
-plt.ylim((0,360))
+plt.ylim((phz_min, phz_max))
 plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
 plt.title('In-Transit Spots Only')
@@ -190,7 +194,7 @@ plt.title('DBSCAN: Estimated number of clusters: %d' % n_clusters_)
 plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
 plt.xlim((np.min(tmid), np.max(tmid)))
-plt.ylim((0,360))
+plt.ylim((phz_min, phz_max))
 # cb = plt.colorbar() #oops, this isn't mappable
 # cb.set_label('cluster number')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.png', dpi=250)
@@ -208,8 +212,16 @@ plt.show()
 plt.figure()
 plt.errorbar(per2, medlat,yerr=stdlat,fmt=None)
 plt.scatter(per2, medlat, marker='o')
-plt.xlabel('Cluster Period (days)')
-plt.ylabel('Median Latitude (deg)')
+#overplot the solar law
+# lat = np.arange(-40,40)
+# k = 0.2 # delta Omeag / Omega for Sun
+# k = np.arange(0.05, 1, 0.05)
+# for ik in k:
+#     per_lat = per / (1 - ik*(np.sin(lat/180.*np.pi)**2.0))
+#     plt.plot(per_lat, lat, 'k')
+# plt.xlabel('Cluster Period (days)')
+# plt.ylabel('Median Latitude (deg)')
+# plt.ylim((-23,23))
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.png', dpi=250)
 plt.show()
 
@@ -242,10 +254,46 @@ for k, col in zip(unique_labels, colors):
     class_member_mask = (labels == k)
     xy = Xdbs[class_member_mask & core_samples_mask]
     if (k != -1) and (len(xy[:,0]) > 2):
-        plt.plot(xy[:,0]-np.min(xy[:,0]), xy[:,2], color=col)
+        tmax = xy[:,0][np.argmax(xy[:,2])]
+        plt.plot(xy[:,0]-tmax, xy[:,2], color=col)
+
 plt.xlabel('Time (days)')
 plt.ylabel('Radius')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.png', dpi=250)
 plt.show()
 
-# Compute the differential rotation (k) parameter
+# now same figure in area units
+R_sun = 6.955e10 # cm
+R_star = R_sun # * 1.02
+microHem = 3e16 # cm sq
+
+plt.figure(figsize=(10,6))
+for k, col in zip(unique_labels, colors):
+    if k == -1:
+        # Black used for noise.
+        col = 'k'
+    class_member_mask = (labels == k)
+    xy = Xdbs[class_member_mask & core_samples_mask]
+    if (k != -1) and (len(xy[:,0]) > 5) and \
+            (np.max(xy[:,2])>0.1) and (np.max(xy[:,2])/np.min(xy[:,2]) > 1.5):
+        tmax = xy[:,0][np.argmax(xy[:,2])]
+        area = (np.pi * (xy[:,2]*R_star)**2.0) / microHem
+
+        plt.plot(xy[:,0]-tmax, area, color=col)
+        plt.scatter(xy[:,0]-tmax, area, c=col)
+
+sunT = np.arange(0.,50.)
+maxA = 17000.0
+sunA = np.zeros_like(sunT) + maxA
+for i in range(len(sunT)-1):
+    dA = 24. + 0.116*sunA[i]
+    sunA[i+1] = sunA[i] - dA
+plt.plot(sunT, sunA, 'k')
+
+plt.xlabel('Time (days)')
+plt.ylabel('Area ($\mu$Hem)')
+plt.xlim((-10,45))
+plt.ylim((0,2e4))
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.png', dpi=250)
+plt.show()
+
