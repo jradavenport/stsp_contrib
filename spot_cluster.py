@@ -16,8 +16,8 @@ mpl.rcParams['font.size'] = 16
 #--------- START OF SETUP ------------
 # CONFIG THESE THINGS FOR EACH RUN
 
-fname = 'k17'
-# fname = 'joe'
+# fname = 'k17'
+fname = 'joe'
 
 
 
@@ -127,8 +127,9 @@ plt.ylabel('Longitude (deg)')
 plt.title('In-Transit Spots Only')
 cb = plt.colorbar()
 cb.set_label('spot radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time.png', dpi=250)
-plt.show()
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 #####################
 
 
@@ -197,33 +198,41 @@ plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((phz_min, phz_max))
 # cb = plt.colorbar() #oops, this isn't mappable
 # cb.set_label('cluster number')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.png', dpi=250)
-plt.show()
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 
 
 plt.figure()
 h = plt.hist(per2)
 plt.xlabel('Period (days)')
 plt.ylabel('Number of Clusters')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_hist.png', dpi=250)
-plt.show()
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_hist.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 
 
 plt.figure()
 plt.errorbar(per2, medlat,yerr=stdlat,fmt=None)
 plt.scatter(per2, medlat, marker='o')
-#overplot the solar law
-# lat = np.arange(-40,40)
-# k = 0.2 # delta Omeag / Omega for Sun
-# k = np.arange(0.05, 1, 0.05)
-# for ik in k:
-#     per_lat = per / (1 - ik*(np.sin(lat/180.*np.pi)**2.0))
-#     plt.plot(per_lat, lat, 'k')
-# plt.xlabel('Cluster Period (days)')
-# plt.ylabel('Median Latitude (deg)')
-# plt.ylim((-23,23))
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.png', dpi=250)
-plt.show()
+
+if (fname == 'joe'):
+    #overplot the solar law
+    lat = np.arange(-40,40)
+    k = [1.0] # delta Omeag / Omega
+    # k = [0.2] # delta Omeag / Omega for Sun
+    # k = np.arange(0.05, 1, 0.05) # a range of K values
+    for ik in k:
+        per_lat = per / (1 - ik*(np.sin(lat/180.*np.pi)**2.0))
+        plt.plot(per_lat, lat, 'k')
+    plt.ylim((-15, 15))
+    plt.xlim((9.6, 10.4))
+
+plt.xlabel('DBSCAN Cluster Period (days)')
+plt.ylabel('Median Cluster Latitude (deg)')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 
 
 #-- make these other plots
@@ -240,8 +249,9 @@ plt.scatter(cdur, cpeak, marker='d',color='k')
 plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
 plt.ylabel('Max Radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.png', dpi=250)
-plt.show()
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 
 
 
@@ -259,8 +269,9 @@ for k, col in zip(unique_labels, colors):
 
 plt.xlabel('Time (days)')
 plt.ylabel('Radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.png', dpi=250)
-plt.show()
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 
 # now same figure in area units
 R_sun = 6.955e10 # cm
@@ -294,6 +305,7 @@ plt.xlabel('Time (days)')
 plt.ylabel('Area ($\mu$Hem)')
 plt.xlim((-10,45))
 plt.ylim((0,2e4))
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.png', dpi=250)
-plt.show()
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.png', dpi=250, bbox_inches='tight')
+plt.close()
+# plt.show()
 
