@@ -127,7 +127,7 @@ plt.ylabel('Longitude (deg)')
 plt.title('In-Transit Spots Only')
 cb = plt.colorbar()
 cb.set_label('spot radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 #####################
@@ -198,7 +198,7 @@ plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((phz_min, phz_max))
 # cb = plt.colorbar() #oops, this isn't mappable
 # cb.set_label('cluster number')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -207,7 +207,7 @@ plt.figure()
 h = plt.hist(per2)
 plt.xlabel('Period (days)')
 plt.ylabel('Number of Clusters')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_hist.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_hist.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -230,7 +230,7 @@ if (fname == 'joe'):
 
 plt.xlabel('DBSCAN Cluster Period (days)')
 plt.ylabel('Median Cluster Latitude (deg)')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -249,7 +249,7 @@ plt.scatter(cdur, cpeak, marker='d',color='k')
 plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
 plt.ylabel('Max Radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -269,7 +269,7 @@ for k, col in zip(unique_labels, colors):
 
 plt.xlabel('Time (days)')
 plt.ylabel('Radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -305,7 +305,7 @@ plt.xlabel('Time (days)')
 plt.ylabel('Area ($\mu$Hem)')
 plt.xlim((-10,45))
 plt.ylim((0,2e4))
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.png', dpi=250, bbox_inches='tight')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
