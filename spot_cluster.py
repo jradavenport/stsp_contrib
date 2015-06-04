@@ -211,6 +211,10 @@ plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_
 plt.close()
 # plt.show()
 
+print(np.percentile(per2, [5,95]))
+
+
+
 
 plt.figure()
 plt.errorbar(per2, medlat,yerr=stdlat,fmt=None)
@@ -219,12 +223,14 @@ plt.scatter(per2, medlat, marker='o')
 if (fname == 'joe'):
     #overplot the solar law
     lat = np.arange(-40,40)
-    k = [1.0] # delta Omeag / Omega
-    # k = [0.2] # delta Omeag / Omega for Sun
-    # k = np.arange(0.05, 1, 0.05) # a range of K values
-    for ik in k:
-        per_lat = per / (1 - ik*(np.sin(lat/180.*np.pi)**2.0))
-        plt.plot(per_lat, lat, 'k')
+    k = 1.0 # delta Omeag / Omega
+    per_lat = per / (1 - k*(np.sin(lat/180.*np.pi)**2.0))
+    plt.plot(per_lat, lat, 'k')
+
+    k = [0.2] # delta Omeag / Omega for Sun
+    per_lat = per / (1 - k*(np.sin(lat/180.*np.pi)**2.0))
+    plt.plot(per_lat, lat, 'red')
+
     plt.ylim((-15, 15))
     plt.xlim((9.6, 10.4))
 
@@ -248,10 +254,25 @@ plt.figure()
 plt.scatter(cdur, cpeak, marker='d',color='k')
 plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
-plt.ylabel('Max Radius')
+plt.ylabel('Max Spot Radius')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
+
+
+# now same figure in area units
+R_sun = 6.955e10 # cm
+R_star = R_sun # * 1.02
+microHem = 3e16 # cm sq
+
+
+plt.figure()
+plt.scatter(cdur, (np.pi * (np.array(cpeak,dtype='float')*R_star)**2.0) / microHem, marker='d',color='k')
+# plt.plot(cdur, line_y_ransac, '-k')
+plt.xlabel('Cluster Duration (days)')
+plt.ylabel('Max Spot Area ($\mu$Hem)')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_area.pdf', dpi=250, bbox_inches='tight')
+plt.close()
 
 
 
@@ -272,6 +293,8 @@ plt.ylabel('Radius')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
+
+
 
 # now same figure in area units
 R_sun = 6.955e10 # cm
