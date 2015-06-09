@@ -16,8 +16,8 @@ mpl.rcParams['font.size'] = 16
 #--------- START OF SETUP ------------
 # CONFIG THESE THINGS FOR EACH RUN
 
-# fname = 'k17'
-fname = 'joe'
+fname = 'k17'
+# fname = 'joe'
 
 
 
@@ -241,6 +241,32 @@ plt.close()
 # plt.show()
 
 
+
+
+plt.figure(figsize=(8,5))
+plt.errorbar(per2, np.abs(medlat),yerr=stdlat,fmt=None)
+plt.scatter(per2, np.abs(medlat), marker='o')
+if (fname == 'joe'):
+    #overplot the solar law
+    lat = np.arange(0,40)
+    k = 1.0 # delta Omeag / Omega
+    per_lat = per / (1 - k*(np.sin(lat/180.*np.pi)**2.0))
+    plt.plot(per_lat, np.abs(lat), 'k')
+
+    k = [0.2] # delta Omeag / Omega for Sun
+    per_lat = per / (1 - k*(np.sin(lat/180.*np.pi)**2.0))
+    plt.plot(per_lat, np.abs(lat), 'red')
+
+    plt.ylim((0, 15))
+    plt.xlim((9.6, 10.4))
+
+plt.xlabel('DBSCAN Cluster Period (days)')
+plt.ylabel('Median Cluster Latitude (deg)')
+plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_abslat.pdf', dpi=250, bbox_inches='tight')
+plt.close()
+
+
+
 #-- make these other plots
 
 # 1. (cluster duration, peak spot size) scatter plot for all clusters
@@ -250,9 +276,9 @@ model_ransac = linear_model.RANSACRegressor(linear_model.LinearRegression())
 model_ransac.fit(np.array(cdur)[:,np.newaxis], np.array(cpeak)[:,np.newaxis])
 line_y_ransac = model_ransac.predict(np.array(cdur)[:,np.newaxis])
 
-plt.figure()
+plt.figure(figsize=(8,3))
 plt.scatter(cdur, cpeak, marker='d',color='k')
-plt.plot(cdur, line_y_ransac, '-k')
+# plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
 plt.ylabel('Max Spot Radius')
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.pdf', dpi=250, bbox_inches='tight')
@@ -266,7 +292,7 @@ R_star = R_sun # * 1.02
 microHem = 3e16 # cm sq
 
 
-plt.figure()
+plt.figure(figsize=(8,3))
 plt.scatter(cdur, (np.pi * (np.array(cpeak,dtype='float')*R_star)**2.0) / microHem, marker='d',color='k')
 # plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
@@ -275,6 +301,7 @@ plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_
 plt.close()
 
 
+print('mean duration: '+str(np.mean(cdur)))
 
 # 2. (time, spot radius) overlap time series for all clusters
 plt.figure()
@@ -309,7 +336,8 @@ for k, col in zip(unique_labels, colors):
     class_member_mask = (labels == k)
     xy = Xdbs[class_member_mask & core_samples_mask]
     if (k != -1) and (len(xy[:,0]) > 5) and \
-            (np.max(xy[:,2])>0.1) and (np.max(xy[:,2])/np.min(xy[:,2]) > 1.5):
+            (np.max(xy[:,2])>0.1) and \
+            (np.max(xy[:,2])/np.min(xy[:,2]) > 1.5):
         tmax = xy[:,0][np.argmax(xy[:,2])]
         area = (np.pi * (xy[:,2]*R_star)**2.0) / microHem
 
@@ -330,5 +358,37 @@ plt.xlim((-10,45))
 plt.ylim((0,2e4))
 plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.pdf', dpi=250, bbox_inches='tight')
 plt.close()
-# plt.show()
 
+
+if (fname=='k17'):
+    plt.figure(figsize=(10,6))
+    for k, col in zip(unique_labels, colors):
+        if k == -1:
+            # Black used for noise.
+            col = 'k'
+        class_member_mask = (labels == k)
+        xy = Xdbs[class_member_mask & core_samples_mask]
+        if (k != -1) and (len(xy[:,0]) > 5):
+            tmax = xy[:,0][np.argmax(xy[:,2])]
+            area = (np.pi * (xy[:,2]*R_star)**2.0) / microHem
+
+            # good spot 1
+            if (np.median(xy[:,0])>920) and (np.median(xy[:,0])<1000) and \
+                    (np.median(xy[:,1])<50):
+                plt.plot(xy[:,0]-tmax, area, color=col)
+                plt.scatter(xy[:,0]-tmax, area, c=col, s=50)
+
+                print(np.median(xy[:,0]), np.median(xy[:,1]))
+            # another good spot
+            # if (np.median(xy[:,0])>920) and (np.median(xy[:,0])<1000) and \
+            #         (np.median(xy[:,1])<260) and (np.median(xy[:,1])>240):
+            #     plt.plot(xy[:,0]-tmax, area, color=col)
+            #     plt.scatter(xy[:,0]-tmax, area, c=col, s=50)
+
+
+    plt.xlabel('Time (days)')
+    plt.ylabel('Area ($\mu$Hem)')
+    plt.xlim((-20,35))
+    plt.ylim((0,5e4))
+    plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area_good.pdf', dpi=250, bbox_inches='tight')
+    plt.close()
