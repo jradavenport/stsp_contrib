@@ -18,7 +18,7 @@ mpl.rcParams['font.size'] = 16
 
 fname = 'k17'
 # fname = 'joe'
-
+fname = 'flat'
 
 
 if (fname == 'joe'):
@@ -26,19 +26,30 @@ if (fname == 'joe'):
     per = 10.0
     tlim = 1400.0 #- Joe model
     phz_max = 180.0
+    actionL = True # has the Action=L rerun been done to make vis files?
 
 if (fname == 'k17'):
     workingdir = '/astro/store/scratch/jrad/stsp/n8s/' # kepler17
     per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
     tlim = 1600.0 #- Kepler 17
     phz_max = 360.0
+    actionL = True # has the Action=L rerun been done to make vis files?
+
+
+if (fname == 'flat'):
+    workingdir = '/astro/store/scratch/jrad/stsp/kep17flat/' # kepler17
+    per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
+    tlim = 1600.0 #- Kepler 17
+    phz_max = 360.0
+    actionL = False # has the Action=L rerun been done to make vis files?
+
+
 
 phz_min = phz_max - 360.
 
 # parameters for DBSCAN
 cdist = 15.0 # max distance between points to be in cluster
 cmin = 3 # min number of points to form a cluster
-actionL = True # has the Action=L rerun been done to make vis files?
 bump_lim = 1 # number of epochs bump must exist for
 
 
