@@ -10,10 +10,9 @@ for each transit:
 
 import numpy as np
 import os
-# import matplotlib.pyplot as plt
-# from matplotlib import cm
+import matplotlib.pyplot as plt
+from matplotlib import cm
 # import matplotlib as mpl
-#
 # mpl.rcParams['font.size'] = 16
 
 
@@ -40,8 +39,8 @@ import os
 
 def best_spots(dropboxdir = '/astro/users/jrad/Dropbox/python/kepler17/',
                workingdir = '/astro/store/scratch/jrad/stsp/n8s/',
-               pfile='kep17.params', # fname='k17',
-               BJDREF = 2454833.):
+               pfile='kep17.params', fname='k17',
+               BJDREF = 2454833., plot=True):
     '''
 
     :param dropboxdir:
@@ -160,21 +159,22 @@ def best_spots(dropboxdir = '/astro/users/jrad/Dropbox/python/kepler17/',
     lat_out = lat_out[1:,:]
     lon_out = lon_out[1:,:]
 
+
+    if plot is True:
+        plt.figure(figsize=(12,6))
+        for k in range(int(nspt)):
+            yes = np.where((rad_out[:,k] > 0)) # pick spots not = -99
+            plt.scatter(tmid_out[yes], lon_out[yes,k], alpha=0.6,
+                        cmap=cm.gnuplot2_r, c=(rad_out[yes,k]),
+                        s=(rad_out[yes,k] / np.nanmax(rad_out)*20.)**2.)
+        plt.xlim((np.min(tmid_out), np.max(tmid_out)))
+        plt.ylim((0,360))
+        plt.xlabel('Time (BJD - 2454833 days)')
+        plt.ylabel('Longitude (deg)')
+        plt.title('Best Transit Spots')
+        cb = plt.colorbar()
+        cb.set_label('spot radius')
+        plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_best_transits.png', dpi=250)
+        plt.show()
+
     return tmid_out, rad_out, lat_out, lon_out
-
-# plt.figure(figsize=(12,6))
-# for k in range(int(nspt)):
-#     yes = np.where((rad_out[:,k] > 0)) # pick spots not = -99
-#     plt.scatter(tmid_out[yes], lon_out[yes,k], alpha=0.6,
-#                 cmap=cm.gnuplot2_r, c=(rad_out[yes,k]),
-#                 s=(rad_out[yes,k] / np.nanmax(rad_out)*20.)**2.)
-# plt.xlim((np.min(tmid_out), np.max(tmid_out)))
-# plt.ylim((0,360))
-# plt.xlabel('Time (BJD - 2454833 days)')
-# plt.ylabel('Longitude (deg)')
-# plt.title('Best Transit Spots')
-# cb = plt.colorbar()
-# cb.set_label('spot radius')
-# plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_best_transits.png', dpi=250)
-# plt.show()
-
