@@ -268,9 +268,8 @@ for n in range(len(dstart_all)):
 #    print namen, npts, np.size(wndw), npts>=100, os.path.isfile(seeddir + namen + seedprefix+'_parambest.txt')
 
     # only run STSP on line if more than N epoch of data
-    if (USESEED and npts >= 100 and
-            os.path.isfile(seeddir + namen + seedprefix+'_parambest.txt')) \
-            or (not USESEED):
+    if ((USESEED and os.path.isfile(seeddir + namen + seedprefix+'_parambest.txt'))
+        or (not USESEED)) and npts >= 500:
         # write small chunk of LC to operate on
         datafile_n = workdir + namen + prefix+ '.dat'
         dfn = open(datafile_n, 'w')
