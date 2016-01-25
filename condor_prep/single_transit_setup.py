@@ -119,8 +119,8 @@ for datafile in glob(datadir + 'transit*.txt'):
     ddur = max(t)-min(t)
 
     # name of .in file to use for this time window:
-    file = datafile + '_' + prefix + '.in'
-    f = open(file, 'w')
+    file = datafile.split(datadir)[1] + '_' + prefix + '.in'
+    f = open(workdir + file, 'w')
 
     f.write('#PLANET PROPERTIES\n')
     f.write('1\n')            #-- # planets
