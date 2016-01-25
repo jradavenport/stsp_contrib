@@ -52,7 +52,7 @@ def smooth(x, window_len=11, window='hanning'):
 
 
 #############    SET UP PARAMETERS
-prefix = '_run0'
+prefix = 'run0'
 BJDREF = 2454833.
 
 # action can be = 'M', 'L', 'T', 'S' ...
@@ -61,11 +61,12 @@ FLATMODE = True
 
 # !!- Make sure to include / at the end -!!
 basedir = '/home/davenpj3/stsp/kepler17/'
-workdir = basedir + 'k17_single_transits/'
+workdir = basedir + prefix + '/'
+datadir = basedir + 'k17_single_transits/'
 
 # the files to create...
-shellscript = basedir + 'pylaunch_'+prefix+'.csh'
-cfgfile     = basedir + 'condor_'+prefix+'.condor'
+shellscript = workdir + 'pylaunch_'+prefix+'.csh'
+cfgfile     = workdir + 'condor_'+prefix+'.condor'
 
 # location of the STSP code
 stsp_ver = '/home/davenpj3/stsp/STSP/stsp'
@@ -111,14 +112,14 @@ f2.write(' \n')
 
 
 # main loop for .in file writing of each time window & #spots
-for datafile in glob(workdir + 'transit*.txt'):
+for datafile in glob(datadir + 'transit*.txt'):
     t,flux,err = np.loadtxt(datafile, unpack=True)
 
     dstart = min(t)
     ddur = max(t)-min(t)
 
     # name of .in file to use for this time window:
-    file = datafile + prefix + '.in'
+    file = datafile + '_' + prefix + '.in'
     f = open(file, 'w')
 
     f.write('#PLANET PROPERTIES\n')
