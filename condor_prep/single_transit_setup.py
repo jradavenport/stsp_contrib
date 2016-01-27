@@ -187,7 +187,7 @@ for datafile in glob(datadir + 'transit*.txt'):
     f.write('1.0' + '\n')          #-- 1=calculate the brightness correction,0=downfrommax only
 
     if modeT is True:
-        f.write(basename)
+        f.write(basename + '_finalparam.txt \n')
     else:
         for k in range(nspots): # the theta values for each spot in ACTION = fM
             f.write(str(np.pi / 2.0) + '\n')
