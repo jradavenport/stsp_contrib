@@ -50,13 +50,19 @@ def smooth(x, window_len=11, window='hanning'):
     y=np.convolve(w/w.sum(), s, mode='valid')
     return y[(window_len/2-1):-(window_len/2)]
 
+# should we use ACTION=T (fully seeded, resume MCMC)?
+modeT = True
 
 #############    SET UP PARAMETERS
 prefix = 'run0'
 BJDREF = 2454833.
 
 # action can be = 'M', 'L', 'T', 'S' ...
-action = 'fM'
+if modeT is True:
+    action = 'fT'
+else:
+    action = 'fM'
+
 FLATMODE = True
 
 # !!- Make sure to include / at the end -!!
@@ -65,8 +71,12 @@ workdir = basedir + prefix + '/'
 datadir = basedir + 'k17_single_transits/'
 
 # the files to create...
-shellscript = workdir + 'pylaunch_'+prefix+'.csh'
-cfgfile     = workdir + 'condor_'+prefix+'.condor'
+if modeT is True:
+    shellscript = workdir + 'pylaunch_'+prefix+'1.csh'
+    cfgfile     = workdir + 'condor_'+prefix+'1.condor'
+else:
+    shellscript = workdir + 'pylaunch_'+prefix+'.csh'
+    cfgfile     = workdir + 'condor_'+prefix+'.condor'
 
 # location of the STSP code
 stsp_ver = '/home/davenpj3/stsp/STSP/stsp'
@@ -74,8 +84,12 @@ stsp_ver = '/home/davenpj3/stsp/STSP/stsp'
 #  SET UP MCMC & FITTING PARAMETERS
 nspots = 3
 ascale = '2.5' # the "jump" parameter
-nsteps = '10000' # MCMC steps
 npop = '100' # walkers
+
+if modeT is True:
+    nsteps = '30000' # do more steps for resume
+else:
+    nsteps = '10000' # MCMC steps
 
 # the 4th order limb darkening array
 limb_array = '0.59984  -0.165775  0.6876732  -0.349944' # for Kep 17
@@ -101,13 +115,13 @@ sden = str(params[8])
 #############    create CONDOR .cfg file
 f2 = open(cfgfile,'w')
 f2.write('Notification = never \n')
-f2.write('Executable = '+shellscript+' \n')
+f2.write('Executable = ' + shellscript + ' \n')
 f2.write('Initialdir = ' + workdir + '\n')
 f2.write('Universe = vanilla \n')
 f2.write(' \n')
-f2.write('Log = '+workdir+'log.txt \n')
-f2.write('Error = '+workdir+'err.txt \n')
-f2.write('Output = '+workdir+'out.txt \n')
+f2.write('Log = ' + workdir+'log.txt \n')
+f2.write('Error = ' + workdir+'err.txt \n')
+f2.write('Output = ' + workdir+'out.txt \n')
 f2.write(' \n')
 
 
@@ -116,10 +130,14 @@ for datafile in glob(datadir + 'transit*.txt'):
     t,flux,err = np.loadtxt(datafile, unpack=True)
 
     dstart = min(t)
-    ddur = max(t)-min(t)
+    ddur = max(t) - min(t)
 
     # name of .in file to use for this time window:
-    file = datafile.split(datadir)[1] + '_' + prefix + '.in'
+    basename = datafile.split(datadir)[1] + '_' + prefix
+    if modeT is True:
+        file = basename + '1.in'
+    else:
+        file = basename + '.in'
     f = open(workdir + file, 'w')
 
     f.write('#PLANET PROPERTIES\n')
@@ -168,8 +186,11 @@ for datafile in glob(datadir + 'transit*.txt'):
 
     f.write('1.0' + '\n')          #-- 1=calculate the brightness correction,0=downfrommax only
 
-    for k in range(nspots): # the theta values for each spot in ACTION = fM
-        f.write(str(np.pi / 2.0) + '\n')
+    if modeT is True:
+        f.write(basename)
+    else:
+        for k in range(nspots): # the theta values for each spot in ACTION = fM
+            f.write(str(np.pi / 2.0) + '\n')
 
     f.close()
 
