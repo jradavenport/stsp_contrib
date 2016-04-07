@@ -65,7 +65,7 @@ datadir = basedir + 'k17_single_transits/'
 shfile = workdir + 'runL_'+prefix+'.sh'
 
 # location of the STSP code
-stsp_ver = '/home/davenpj3/stsp/STSP/stsp'
+stsp_ver = '/home/davenpj3/stsp/STSP/stsp_L'
 
 #  SET UP MCMC & FITTING PARAMETERS
 nspots = 3
