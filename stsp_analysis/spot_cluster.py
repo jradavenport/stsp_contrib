@@ -36,28 +36,30 @@ if (fname == 'k17'):
     actionL = True # has the Action=L rerun been done to make vis files?
 
 
-if (fname == 'flat'):
-    workingdir = '/astro/store/scratch/jrad/stsp/kep17flat/' # kepler17
-    per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
-    tlim = 1600.0 #- Kepler 17
-    phz_max = 360.0
-    actionL = False # has the Action=L rerun been done to make vis files?
+# if (fname == 'flat'):
+# workingdir = '/astro/store/scratch/jrad/stsp/kep17flat/' # kepler17
+workingdir = '/Users/davenpj3/research/kepler17/run0/'
+per = 12.25817669188 # the rotation period used to fold this data and fed to STSP previous to this
+tlim = 1600.0 #- Kepler 17
+phz_max = 360.0
+actionL = False # has the Action=L rerun been done to make vis files?
+BJDREF = 2454833.
 
-
+paperdir = '/Users/davenpj3/Dropbox/papers/kepler17/kepler17_paper/'
 
 phz_min = phz_max - 360.
 
 # parameters for DBSCAN
 cdist = 15.0 # max distance between points to be in cluster
 cmin = 3 # min number of points to form a cluster
-bump_lim = 1 # number of epochs bump must exist for
+bump_lim = -1 # number of epochs bump must exist for
 
 
 #--------- END OF SETUP ------------
 
 
 # read in each parambest file, save as big structure
-os.system('ls ' + workingdir + '*parambest*.txt > parambest.lis')
+os.system('ls ' + workingdir + '*run01_parambest*.txt > parambest.lis')
 pbestfile = np.loadtxt('parambest.lis', dtype='string')
 
 # read first file in to learn size
@@ -89,7 +91,7 @@ for n in range(len(pbestfile)):
         flg = np.zeros_like(tn)
         x = np.zeros_like(tn)
 
-    tmid[n] = np.median(tn)
+    tmid[n] = np.median(tn) - BJDREF
 
     for i in range(int(nspt)):
         r1[n,i] = t[np_l + 1 + i*3.] # radius
@@ -105,7 +107,14 @@ y1[np.where((y1 > phz_max))] = y1[np.where((y1 > phz_max))] - 360.
 
 tmid_nspt = np.repeat(tmid, nspt).reshape((len(tmid), nspt))
 
-yes1 = np.where((in_trans.ravel() >= bump_lim) & (tmid_nspt.ravel() < tlim))
+# yes1 = np.where( (in_trans.ravel() >= bump_lim) &
+#                  (tmid_nspt.ravel() < tlim) )
+
+Rlim = 0.25
+
+yes1 = np.where((tmid_nspt.ravel() < tlim) &
+                (r1.ravel() <= Rlim))
+
 
 xo = tmid_nspt.ravel()[yes1] # time
 yo = y1.ravel()[yes1] # lon
@@ -128,20 +137,32 @@ X4d = data4d.T
 # The general plot, replicate from IDL work
 plt.figure(figsize=(12,6))
 for k in range(int(nspt)):
-    yes = np.where((in_trans[:,k] >= bump_lim))
-    plt.scatter(tmid[yes], y1[yes,k], cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
-                s=(r1[yes,k] / np.nanmax(r1)*20.)**2.)
+    yes = np.where((in_trans[:,k] >= bump_lim) &
+                   (r1[:,k] <= Rlim))
+    plt.scatter(tmid[yes], y1[yes,k],
+                cmap=cm.gnuplot2_r, c=(r1[yes,k]), alpha=0.6,
+                s=(r1[yes,k] / np.nanmax(r1)*50.)**2.)
 plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((phz_min, phz_max))
 plt.xlabel('Time (BJD - 2454833 days)')
 plt.ylabel('Longitude (deg)')
-plt.title('In-Transit Spots Only')
+# plt.title('In-Transit Spots Only')
 cb = plt.colorbar()
 cb.set_label('spot radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir + fname+'_lon_v_time.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 #####################
+
+
+# radii histogram plot
+plt.figure(figsize=(7,5))
+_ = plt.hist(r1.ravel(), bins=25)
+plt.xlabel('Spot Radius')
+plt.ylabel('# of bump detections')
+plt.savefig(paperdir + fname+'_radii_hist.pdf', dpi=250, bbox_inches='tight')
+plt.close()
+
 
 
 #-- follow DBSCAN example from:
@@ -209,7 +230,7 @@ plt.xlim((np.min(tmid), np.max(tmid)))
 plt.ylim((phz_min, phz_max))
 # cb = plt.colorbar() #oops, this isn't mappable
 # cb.set_label('cluster number')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_lon_v_time_cluster.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_lon_v_time_cluster.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -218,7 +239,7 @@ plt.figure()
 h = plt.hist(per2)
 plt.xlabel('Period (days)')
 plt.ylabel('Number of Clusters')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_hist.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_per_hist.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -247,7 +268,7 @@ if (fname == 'joe'):
 
 plt.xlabel('DBSCAN Cluster Period (days)')
 plt.ylabel('Median Cluster Latitude (deg)')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_lat.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_per_v_lat.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -273,7 +294,7 @@ if (fname == 'joe'):
 
 plt.xlabel('DBSCAN Cluster Period (days)')
 plt.ylabel('Median Cluster Latitude (deg)')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_per_v_abslat.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_per_v_abslat.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 
 
@@ -292,7 +313,7 @@ plt.scatter(cdur, cpeak, marker='d',color='k')
 # plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
 plt.ylabel('Max Spot Radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_rad.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_dur_v_rad.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -308,7 +329,7 @@ plt.scatter(cdur, (np.pi * (np.array(cpeak,dtype='float')*R_star)**2.0) / microH
 # plt.plot(cdur, line_y_ransac, '-k')
 plt.xlabel('Cluster Duration (days)')
 plt.ylabel('Max Spot Area ($\mu$Hem)')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_dur_v_area.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_dur_v_area.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 
 
@@ -328,7 +349,7 @@ for k, col in zip(unique_labels, colors):
 
 plt.xlabel('Time (days)')
 plt.ylabel('Radius')
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_rad.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_time_v_rad.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 # plt.show()
 
@@ -367,7 +388,7 @@ plt.xlabel('Time (days)')
 plt.ylabel('Area ($\mu$Hem)')
 plt.xlim((-10,45))
 plt.ylim((0,2e4))
-plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area.pdf', dpi=250, bbox_inches='tight')
+plt.savefig(paperdir +fname+'_time_v_area.pdf', dpi=250, bbox_inches='tight')
 plt.close()
 
 
@@ -401,5 +422,5 @@ if (fname=='k17'):
     plt.ylabel('Area ($\mu$Hem)')
     plt.xlim((-20,35))
     plt.ylim((0,5e4))
-    plt.savefig('/astro/users/jrad/Dropbox/research_projects/gj1243_spots/'+fname+'_time_v_area_good.pdf', dpi=250, bbox_inches='tight')
+    plt.savefig(paperdir +fname+'_time_v_area_good.pdf', dpi=250, bbox_inches='tight')
     plt.close()
